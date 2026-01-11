@@ -1,0 +1,60 @@
+name: Generate Readability Report
+
+on:
+  # Запуск по расписанию (каждый понедельник в 9:00)
+  schedule:
+    - cron: '0 9 * * 1'
+  
+  # Ручной запуск с параметрами
+  workflow_dispatch:
+    inputs:
+      text_file:
+        description: 'Файл для анализа (из data/sample_texts/)'
+        required: false
+        default: 'all'
+      language:
+        description: 'Язык текста'
+        required: false
+        default: 'en'
+        type: choice
+        options:
+          - en
+          - ru
+
+jobs:
+  generate-report:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+      
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+      
+      - name: Generate analysis report
+        run: |
+          python scripts/generate_report.py \
+            --output reports/analysis_report.md \
+            --language ${{ github.event.inputs.language || 'en' }}
+      
+      - name: Upload report artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: readability-report-${{ github.run_number }}
+          path: reports/
+          retention-days: 30
+      
+      - name: Deploy to GitHub Pages
+        if: github.ref == 'refs/heads/main'
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./reports
+          destination_dir: reports
