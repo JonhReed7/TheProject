@@ -1,14 +1,4 @@
-"""
-Text Readability Analyzer
-=========================
-
-Инструмент для анализа читабельности учебных материалов.
-
-Основные компоненты:
-- TextAnalyzer: главный класс для анализа текста
-- ReadabilityResult: результат анализа с метриками
-- Функции расчёта индексов читабельности
-"""
+"""Text Readability Analyzer."""
 
 from .analyzer import TextAnalyzer, ReadabilityResult
 from .metrics import (
@@ -20,7 +10,6 @@ from .metrics import (
 )
 
 __version__ = "1.0.0"
-__author__ = "Your Name"
 __all__ = [
     "TextAnalyzer",
     "ReadabilityResult",
