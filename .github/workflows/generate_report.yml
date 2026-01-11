@@ -1,60 +1,99 @@
 name: Generate Readability Report
 
 on:
-  # Запуск по расписанию (каждый понедельник в 9:00)
+  # Запуск по расписанию: каждый понедельник в 09:00 UTC
   schedule:
     - cron: '0 9 * * 1'
   
   # Ручной запуск с параметрами
   workflow_dispatch:
     inputs:
-      text_file:
-        description: 'Файл для анализа (из data/sample_texts/)'
-        required: false
-        default: 'all'
       language:
-        description: 'Язык текста'
+        description: 'Язык анализа текстов'
         required: false
-        default: 'en'
+        default: 'auto'
         type: choice
         options:
+          - auto
           - en
           - ru
+      deploy:
+        description: 'Опубликовать на GitHub Pages?'
+        required: false
+        default: true
+        type: boolean
+
+# Права для записи (нужно для GitHub Pages)
+permissions:
+  contents: write
+  pages: write
+  id-token: write
 
 jobs:
-  generate-report:
+  generate-and-deploy:
     runs-on: ubuntu-latest
     
     steps:
-      - name: Checkout
+      - name: 📥 Checkout repository
         uses: actions/checkout@v4
       
-      - name: Set up Python
+      - name: 🐍 Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.10'
       
-      - name: Install dependencies
+      - name: 📦 Install dependencies
         run: |
+          python -m pip install --upgrade pip
           pip install -r requirements.txt
       
-      - name: Generate analysis report
+      - name: 📊 Generate analysis report
         run: |
           python scripts/generate_report.py \
-            --output reports/analysis_report.md \
-            --language ${{ github.event.inputs.language || 'en' }}
+            --output reports/index.md \
+            --language ${{ github.event.inputs.language || 'auto' }}
       
-      - name: Upload report artifact
+      - name: 📝 Convert Markdown to HTML
+        run: |
+          pip install markdown
+          python -c "
+          import markdown
+          with open('reports/index.md', 'r') as f:
+              md_content = f.read()
+          html = markdown.markdown(md_content, extensions=['tables', 'fenced_code'])
+          full_html = f'''<!DOCTYPE html>
+          <html>
+          <head>
+              <meta charset=\"utf-8\">
+              <title>Readability Analysis Report</title>
+              <style>
+                  body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 900px; margin: 0 auto; padding: 20px; }}
+                  table {{ border-collapse: collapse; width: 100%; margin: 20px 0; }}
+                  th, td {{ border: 1px solid #ddd; padding: 12px; text-align: left; }}
+                  th {{ background-color: #4CAF50; color: white; }}
+                  tr:nth-child(even) {{ background-color: #f9f9f9; }}
+                  h1, h2, h3 {{ color: #333; }}
+                  code {{ background: #f4f4f4; padding: 2px 6px; border-radius: 4px; }}
+              </style>
+          </head>
+          <body>{html}</body>
+          </html>'''
+          with open('reports/index.html', 'w') as f:
+              f.write(full_html)
+          "
+      
+      - name: 📦 Upload report artifact
         uses: actions/upload-artifact@v4
         with:
           name: readability-report-${{ github.run_number }}
           path: reports/
           retention-days: 30
       
-      - name: Deploy to GitHub Pages
-        if: github.ref == 'refs/heads/main'
+      - name: 🚀 Deploy to GitHub Pages
+        if: ${{ github.event.inputs.deploy != 'false' }}
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./reports
-          destination_dir: reports
+          destination_dir: .
+          commit_message: '📊 Update readability report'

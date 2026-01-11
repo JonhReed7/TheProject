@@ -1,0 +1,5 @@
+The fundamental principles of thermodynamics govern the behavior of energy transfer in physical systems. The first law establishes the conservation of energy, stating that energy cannot be created or destroyed but only transformed from one form to another. The second law introduces the concept of entropy, describing the natural tendency of systems to evolve toward states of greater disorder.
+
+Understanding these principles requires familiarity with concepts such as heat capacity, work functions, and state variables. The application of thermodynamic equations enables engineers to design efficient engines, refrigeration systems, and chemical processes. Advanced topics include statistical mechanics, which provides a molecular-level interpretation of macroscopic thermodynamic properties.
+
+The Carnot cycle represents an idealized thermodynamic cycle that sets the upper limit for efficiency in heat engines. Real-world applications must account for irreversibilities and friction losses that reduce actual performance below theoretical maximums.
